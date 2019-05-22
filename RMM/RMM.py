@@ -2,19 +2,7 @@
 # author: unclejimao
 
 # 使用逆向最大匹配算法实现中文分词
-
-words_dic = []
-
-
-def init():
-    """
-    读取词典文件，载入词典
-    :return:
-    """
-    with open("../dict.txt", "r", encoding="utf8") as dic_input:
-        for word in dic_input:
-            words_dic.append(word.strip())
-
+import load_dic
 
 # 逆向最大匹配算法实现中文切词方法
 def cut_words(raw_sentence, words_dic):
@@ -48,5 +36,12 @@ def cut_words(raw_sentence, words_dic):
         words_length -= max_cut_length
 
     cut_word_list.reverse()  # 由于RMM从后往前切词，list中的词语顺序是反的，因此输出前要reverse一下
-    result = " ".join(cut_word_list)
-    return result
+    return cut_word_list
+
+
+if __name__ == '__main__':
+    words_dic = load_dic.init()
+
+    with open("./train.txt", "r", encoding="utf8") as train_set:
+        for line in train_set:
+            print(" ".join(cut_words(line, words_dic)))

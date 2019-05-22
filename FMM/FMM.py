@@ -2,23 +2,10 @@
 # author: unclejimao
 
 # 使用正向最大匹配算法实现中文分词
-
-words_dic = []
-
-
-def init():
-    """
-    读取词典文件，载入词典
-    :return:
-    """
-    with open("./dict.txt", "r", encoding="utf8") as dic_input:
-        # 按行读取词典文件，去掉行末换行符
-        for word in dic_input:
-            words_dic.append(word.strip())
-
+import load_dic
 
 # 切词方法
-def cut_words(raw_sentence, word_dic):
+def cut_words(raw_sentence, words_dic):
     """
     FMM实现中文切词
     :param raw_sentence: 原始待切分句子
@@ -49,5 +36,12 @@ def cut_words(raw_sentence, word_dic):
         sentence = sentence[max_cut_length:]  # 切除一个词义后，待切分序列变为去掉已切除词语后的剩余序列
         words_length -= max_cut_length  # 待切分序列长度也要减去已切除词语长度
 
-    result = " ".join(cut_word_list)
-    return result
+    return cut_word_list
+
+
+if __name__ == '__main__':
+    words_dic = load_dic.init()
+
+    with open("./train.txt", "r", encoding="utf8") as train_set:
+        for line in train_set:
+            print(" ".join(cut_words(line, words_dic)))
