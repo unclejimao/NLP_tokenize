@@ -26,10 +26,10 @@ def cut_words(raw_sentence, word_dic):
     :return:
     """
 
-    max_length = max(len(word) for word in words_dic)  # 统计词典中最长的词
+    max_length = max(len(word) for word in words_dic)  # 统计词典中最长的词的长度
     sentence = raw_sentence.strip()  # 待切分句子去除换行符
     words_length = len(sentence)  # 待切分序列长度
-    cut_word_list = []
+    cut_word_list = []  # 用于存储切词结果
 
     while words_length > 0:
         max_cut_length = min(max_length, words_length)  # 待切分序列最长长度为 词典中最长词长 和 待切分句子长度 中较小的那个
