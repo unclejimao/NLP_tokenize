@@ -209,20 +209,20 @@ class HMM_MODEL:
     def do_predict(self, sequence):
         """
         预测。采用 Viterbi 算法求得最优路径
-        :param sequence:
+        :param sequence: 观测序列，即单字序列
         :return:
         """
-        tab = [{}]
+        delta = [{}]
         path = {}
         PI_vec, trans_mat, emit_mat = self.get_prob()
 
         # 初始化
         for state in self.states:
-            tab[0][state] = PI_vec[state] * emit_mat[state].get(sequence[0], EPS)
+            delta[0][state] = PI_vec[state] * emit_mat[state].get(sequence[0], EPS)
             path[state] = [state]
             """
             初始化后，
-            tab=[
+            delta=[
                 {
                     "B":0.04
                     "M":0.01
@@ -241,22 +241,95 @@ class HMM_MODEL:
 
         # 创建动态搜索表
         for t in range(1, len(sequence)):  # t=1
-            tab.append({})
+            delta.append({})
             new_path = {}
             for state1 in self.states:  # M
                 items = []
                 for state2 in self.states:  # E
-                    if tab[t - 1][state2] == 0:
+                    if delta[t - 1][state2] == 0:
                         continue
-                    prob = tab[t - 1][state2] * trans_mat[state2].get(state1, EPS) * emit_mat[state1].get(sequence[t],
-                                                                                                          EPS)
+                    prob = delta[t - 1][state2] * trans_mat[state2].get(state1, EPS) * emit_mat[state1].get(sequence[t],
+                                                                                                            EPS)
                     items.append((prob, state2))  # item保存的是 当前时刻t，所有可能转移到状态state1的状态取值及其概率
                 best = max(items)  # (0.76,"E")
-                tab[t][state1] = best[0]  # 取其中概率最大的加入tab，并更新路径
+                delta[t][state1] = best[0]  # 取其中概率最大的加入delta，并更新路径
                 new_path[state1] = path[best[1]] + [state1]
             path = new_path  # path当前的内容中 key 表示的是t时刻的状态取值，value 表示的是 使t时刻状态为key的最佳路径（状态序列，即使t时刻状态为key的概率最大的状态序列）
 
-        # 搜索最优路径。当所有时刻都遍历后，tab的最后一项就是 T时刻可能的状态取值及其概率；path的key和value就是 T时刻的可能状态取值及达到此状态的最佳路径
-        prob, state = max([(tab[len(sequence) - 1][state], state) for state in self.states])
+        # 搜索最优路径。当所有时刻都遍历后，delta的最后一项就是 T时刻可能的状态取值及其概率；path的key和value就是 T时刻的可能状态取值及达到此状态的最佳路径
+        prob, state = max([(delta[len(sequence) - 1][state], state) for state in self.states])
         return path[state]
+
+
+class HMM_seg(HMM_MODEL):
+
+    def __init__(self, *args, **kwargs):
         pass
+
+    def read_txt(self, filename):
+        pass
+
+    def train(self):
+        pass
+
+    def lcut(self, sentence):
+        pass
+
+
+def get_tags(src):
+    """
+    对空格隔开的分词训练文本进行{B，M，E，S}状态标注
+    :param src:
+    :return:
+    """
+    tags = []
+    if len(src) == 1:
+        tags = ["S"]
+    elif len(src) == 2:
+        tags = ["B", "E"]
+    else:
+        m_num = len(src) - 2
+        tags.append("B")
+        tags.extend(["M"] * m_num)
+        tags.append("E")
+    return tags
+
+
+def cut_sent(src, tags):
+    """
+    根据预测得到的标注序列将输入的句子分割为词语列表，也就是把预测得到的状态序列解析成一个 list 列表进行返回
+    :param src:
+    :param tags:
+    :return:
+    """
+    word_list = []
+    start = -1
+    started = False
+
+    if len(tags) != len(src):
+        return None
+
+    if tags[-1] not in {"S", "E"}:
+        if tags[-2] in {"S", "E"}:
+            tags[-1] = "S"
+        else:
+            tags[-1] = "E"
+
+    for i in range(len(tags)):
+        if tags[i] == "S":
+            if started:
+                started = False
+                word_list.append(src[start:i])
+            word_list.append(src[i])
+        elif tags[i] == "B":
+            if started:
+                word_list.append(src[start:i])
+            start = i
+            started = True
+        elif tags[i] == "E":
+            started = False
+            word = src[start:i + 1]
+            word_list.append(word)
+        elif tags[i] == "M":
+            continue
+    return word_list
