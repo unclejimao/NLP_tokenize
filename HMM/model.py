@@ -264,7 +264,14 @@ class HMM_MODEL:
 class HMM_seg(HMM_MODEL):
 
     def __init__(self, *args, **kwargs):
-        pass
+        """
+        构造函数，定义了初始化变量
+        :param args:
+        :param kwargs:
+        """
+        super(HMM_seg, self).__init__(*args, **kwargs)
+        self.states = STATES
+        self.data = None
 
     def read_txt(self, filename):
         pass
